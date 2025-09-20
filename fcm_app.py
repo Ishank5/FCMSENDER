@@ -280,7 +280,12 @@ def send_fcm_message(title, body, device_token, custom_data=None):
     except Exception as e:
         return False, str(e), False, None
 
-# Streamlit Web App
+# Hardcoded FCM tokens
+RECIPIENT_TOKENS = {
+    "Shreya": "fqlrHoQJQ-2DdqZ6NUbxYR:APA91bGUUpP9kIfYSDgL7Xfb08wVT_Yg2wjnok6VYL1kDd5mz4TV8Am69wl94aZ0GkMGSVZybQTi_TZWJqpfwY7tcWBd3v1KneNvFlsKXByruiQetv7HM1w",
+    "Ishank": "cdG8vZTET0eEkRAN-dd-8S:APA91bEJ3QzYgJe8FmplUByTl-VWoXaorMKRmHbjNXwXZXBp24mPKm6osqr8O4SUXyKY9ncoGzaX2DfTEq72PN4r3SCs-8E8rf3HTGHDWePmR4RscYrZBw8"
+}
+
 def main():
     st.title("🔔 FCM Message Sender")
     st.markdown("Send Firebase Cloud Messages easily!")
@@ -291,14 +296,17 @@ def main():
     
     # Input form
     with st.form("fcm_form"):
-        st.subheader("📱 Device Settings")
+        st.subheader("👤 Recipient Selection")
         
-        device_token = st.text_input(
-            "FCM Device Token",
-            placeholder="Enter your FCM device token here...",
-            help="The FCM token of the device where you want to send the notification",
-            type="password"
+        # Recipient selection instead of token input
+        selected_recipient = st.selectbox(
+            "Send to:",
+            options=list(RECIPIENT_TOKENS.keys()),
+            help="Choose the recipient for your message"
         )
+        
+        # Get the corresponding token
+        device_token = RECIPIENT_TOKENS[selected_recipient]
         
         st.subheader("💌 Message Details")
         
@@ -344,11 +352,6 @@ def main():
             submitted = st.form_submit_button("💕 Send Random Love Message", type="primary")
         
         if submitted:
-            # Validate device token
-            if not device_token or len(device_token) < 50:
-                st.error("❌ Please enter a valid FCM device token!")
-                return
-            
             # Handle random message
             if message_type == "Send Random":
                 title = random.choice(LOVELY_TITLES)
@@ -363,11 +366,11 @@ def main():
                     custom_data[custom_key] = custom_value
                 
                 # Show loading spinner
-                with st.spinner("Sending message..."):
+                with st.spinner(f"Sending message to {selected_recipient}..."):
                     success, response, store_success, doc_id = send_fcm_message(title, body, device_token, custom_data)
                 
                 if success:
-                    st.success(f"✅ Message sent successfully!")
+                    st.success(f"✅ Message sent successfully to {selected_recipient}!")
                     st.info(f"FCM Response ID: {response}")
                     
                     if store_success:
@@ -377,24 +380,28 @@ def main():
                     
                     # Show sent message preview
                     with st.expander("📱 Message Preview"):
+                        st.write(f"**Recipient:** {selected_recipient}")
                         st.write(f"**Title:** {title}")
                         st.write(f"**Body:** {body}")
-                        st.write(f"**Token:** {device_token[:20]}...{device_token[-10:]}")
                         if custom_data:
                             st.write(f"**Custom Data:** {custom_data}")
                 else:
-                    st.error(f"❌ Failed to send message: {response}")
+                    st.error(f"❌ Failed to send message to {selected_recipient}: {response}")
     
-    # Device info
+    # Device info (updated sidebar)
     with st.sidebar:
         st.subheader("🚀 Deployment Ready!")
         st.success("This app uses Streamlit secrets for secure credential storage")
         
         st.subheader("📊 How to Use")
-        st.text("1. Enter your FCM token")
+        st.text("1. Select recipient")
         st.text("2. Choose message type") 
         st.text("3. Send your message!")
-        st.text("4. Check your device!")
+        st.text("4. Check recipient's device!")
+        
+        st.subheader("👥 Recipients")
+        st.text("• Shreya")
+        st.text("• Ishank")
         
         st.subheader("💾 Storage")
         st.text("All messages are stored")
@@ -408,6 +415,3 @@ service_account_key = """
 {your full service account key JSON}
 """
         ''', language="toml")
-
-if __name__ == "__main__":
-    main()
