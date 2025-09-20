@@ -415,3 +415,6 @@ service_account_key = """
 {your full service account key JSON}
 """
         ''', language="toml")
+
+if __name__ == "__main__":
+    main()
